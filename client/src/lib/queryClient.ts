@@ -8,10 +8,15 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-function getAuthHeaders() {
+async function getAuthHeaders() {
   const headers: Record<string, string> = {};
   if (auth.currentUser) {
-    headers['x-user-id'] = auth.currentUser.uid;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      headers['Authorization'] = `Bearer ${token}`;
+    } catch (error) {
+      console.error("Error getting ID token:", error);
+    }
   }
   return headers;
 }
@@ -21,8 +26,9 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const authHeaders = await getAuthHeaders();
   const headers = {
-    ...getAuthHeaders(),
+    ...authHeaders,
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
@@ -43,8 +49,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(queryKey.join("/") as string, {
-      headers: getAuthHeaders(),
+      headers: authHeaders,
       credentials: "include",
     });
 
@@ -59,7 +66,7 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: getQueryFn({ on401: "returnNull" }), // Return null on 401 to avoid thrown errors before auth completes
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,

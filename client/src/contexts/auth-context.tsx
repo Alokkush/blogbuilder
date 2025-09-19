@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '@/lib/firebase';
+import { queryClient } from '@/lib/queryClient';
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChange((user) => {
       setUser(user);
       setLoading(false);
+      
+      // Invalidate all queries when auth state changes to refetch with new auth headers
+      queryClient.invalidateQueries();
     });
 
     return unsubscribe;

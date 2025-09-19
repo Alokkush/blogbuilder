@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertBlogSchema, updateBlogSchema } from "@shared/schema";
 import { z } from "zod";
+import { verifyIdToken } from "./firebase-admin";
 
 import { Request, Response, NextFunction } from "express";
 
@@ -11,14 +12,32 @@ interface AuthenticatedRequest extends Request {
 }
 
 const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const userId = req.headers['x-user-id'];
-  if (!userId) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: "Authentication required" });
   }
   
-  const user = await storage.getUser(userId as string);
+  const idToken = authHeader.split('Bearer ')[1];
+  const decodedToken = await verifyIdToken(idToken);
+  
+  if (!decodedToken) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+  
+  // Ensure user exists in our database, create if not
+  let user = await storage.getUser(decodedToken.uid);
   if (!user) {
-    return res.status(401).json({ message: "User not found" });
+    // Auto-create user from token claims
+    try {
+      user = await storage.createUser({
+        id: decodedToken.uid,
+        email: decodedToken.email || '',
+        name: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      return res.status(500).json({ message: "User creation failed" });
+    }
   }
   
   req.user = user;
@@ -26,28 +45,12 @@ const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: Ne
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // User routes
+  // Legacy registration endpoint - disabled for security
+  // Users are now auto-provisioned via authMiddleware
   app.post("/api/auth/register", async (req, res) => {
-    try {
-      const userId = req.headers['x-user-id'] as string;
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
-      if (existingUser) {
-        return res.json({ user: existingUser }); // Return existing user instead of error
-      }
-
-      // Create user with Firebase UID as the ID
-      const userToCreate = userId ? { ...userData, id: userId } : userData;
-      const user = await storage.createUser(userToCreate);
-      res.json({ user });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Internal server error" });
-    }
+    res.status(410).json({ 
+      message: "Registration endpoint deprecated. Users are automatically created on first authentication." 
+    });
   });
 
   app.get("/api/user/:id", async (req, res) => {
