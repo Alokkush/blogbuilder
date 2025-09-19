@@ -28,6 +28,27 @@ export const signUp = async (email: string, password: string, name: string) => {
     name: name,
     createdAt: new Date(),
   });
+
+  // Also register user in our backend database
+  try {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': user.uid,
+      },
+      body: JSON.stringify({
+        email: user.email,
+        name: name,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to register user in backend database:', response.statusText);
+    }
+  } catch (error) {
+    console.warn('Failed to register user in backend database:', error);
+  }
   
   return user;
 };

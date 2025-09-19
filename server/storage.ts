@@ -31,9 +31,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    const userData = insertUser.id ? insertUser : {
+      ...insertUser,
+      id: undefined, // Let database generate UUID if no ID provided
+    };
+    
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values(userData)
       .returning();
     return user;
   }

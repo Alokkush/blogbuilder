@@ -29,15 +29,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.post("/api/auth/register", async (req, res) => {
     try {
+      const userId = req.headers['x-user-id'] as string;
       const userData = insertUserSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
       if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
+        return res.json({ user: existingUser }); // Return existing user instead of error
       }
 
-      const user = await storage.createUser(userData);
+      // Create user with Firebase UID as the ID
+      const userToCreate = userId ? { ...userData, id: userId } : userData;
+      const user = await storage.createUser(userToCreate);
       res.json({ user });
     } catch (error) {
       if (error instanceof z.ZodError) {

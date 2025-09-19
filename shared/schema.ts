@@ -27,8 +27,9 @@ export const blogs = pgTable("blogs", {
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
   createdAt: true,
+}).extend({
+  id: z.string().optional(),
 });
 
 export const insertBlogSchema = createInsertSchema(blogs).omit({
