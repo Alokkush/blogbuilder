@@ -3,7 +3,7 @@ services:
     name: blog-builder-api
     env: node
     buildCommand: npm install --legacy-peer-deps
-    startCommand: npm run dev
+    startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production

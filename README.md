@@ -202,7 +202,7 @@ npm run dev
 2. Create a new Web Service on Render
 3. Connect your GitHub repository
 4. Set build command: `npm install --legacy-peer-deps`
-5. Set start command: `npm run dev`
+5. Set start command: `npm run start`
 6. Set environment variables in Render dashboard:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_KEY`
