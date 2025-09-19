@@ -1,5 +1,6 @@
-import { type User, type InsertUser, type Blog, type InsertBlog, type UpdateBlog, type BlogWithAuthor } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { users, blogs, type User, type InsertUser, type Blog, type InsertBlog, type UpdateBlog, type BlogWithAuthor } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, like, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -18,121 +19,114 @@ export interface IStorage {
   incrementBlogViews(id: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private blogs: Map<string, Blog>;
-
-  constructor() {
-    this.users = new Map();
-    this.blogs = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id,
-      createdAt: new Date()
-    };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async getBlog(id: string): Promise<Blog | undefined> {
-    return this.blogs.get(id);
+    const [blog] = await db.select().from(blogs).where(eq(blogs.id, id));
+    return blog || undefined;
   }
 
   async getBlogWithAuthor(id: string): Promise<BlogWithAuthor | undefined> {
-    const blog = this.blogs.get(id);
-    if (!blog) return undefined;
+    const result = await db
+      .select()
+      .from(blogs)
+      .leftJoin(users, eq(blogs.authorId, users.id))
+      .where(eq(blogs.id, id));
 
-    const author = this.users.get(blog.authorId);
-    if (!author) return undefined;
+    if (!result[0] || !result[0].users) return undefined;
 
-    return { ...blog, author };
+    return {
+      ...result[0].blogs,
+      author: result[0].users,
+    };
   }
 
   async getBlogsByAuthor(authorId: string): Promise<Blog[]> {
-    return Array.from(this.blogs.values())
-      .filter((blog) => blog.authorId === authorId)
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return await db
+      .select()
+      .from(blogs)
+      .where(eq(blogs.authorId, authorId))
+      .orderBy(desc(blogs.updatedAt));
   }
 
   async getPublishedBlogs(limit = 20, offset = 0): Promise<BlogWithAuthor[]> {
-    const publishedBlogs = Array.from(this.blogs.values())
-      .filter((blog) => blog.isPublished)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(offset, offset + limit);
+    const result = await db
+      .select()
+      .from(blogs)
+      .leftJoin(users, eq(blogs.authorId, users.id))
+      .where(eq(blogs.isPublished, true))
+      .orderBy(desc(blogs.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    const blogsWithAuthors: BlogWithAuthor[] = [];
-    for (const blog of publishedBlogs) {
-      const author = this.users.get(blog.authorId);
-      if (author) {
-        blogsWithAuthors.push({ ...blog, author });
-      }
-    }
-
-    return blogsWithAuthors;
+    return result
+      .filter((row) => row.users)
+      .map((row) => ({
+        ...row.blogs,
+        author: row.users!,
+      }));
   }
 
   async createBlog(insertBlog: InsertBlog): Promise<Blog> {
-    const id = randomUUID();
-    const now = new Date();
-    const blog: Blog = { 
-      ...insertBlog,
-      excerpt: insertBlog.excerpt || null,
-      category: insertBlog.category || null,
-      tags: insertBlog.tags || null,
-      theme: insertBlog.theme || null,
-      isPublished: insertBlog.isPublished || null,
-      id,
-      createdAt: now,
-      updatedAt: now,
-      views: "0",
-      mediaUrls: insertBlog.mediaUrls || [],
-    };
-    this.blogs.set(id, blog);
+    const [blog] = await db
+      .insert(blogs)
+      .values({
+        ...insertBlog,
+        excerpt: insertBlog.excerpt || null,
+        category: insertBlog.category || null,
+        tags: insertBlog.tags || null,
+        theme: insertBlog.theme || null,
+        isPublished: insertBlog.isPublished || false,
+      })
+      .returning();
     return blog;
   }
 
   async updateBlog(id: string, updates: UpdateBlog): Promise<Blog | undefined> {
-    const blog = this.blogs.get(id);
-    if (!blog) return undefined;
-
-    const updatedBlog: Blog = {
-      ...blog,
-      ...updates,
-      updatedAt: new Date(),
-    };
-    this.blogs.set(id, updatedBlog);
-    return updatedBlog;
+    const [blog] = await db
+      .update(blogs)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(blogs.id, id))
+      .returning();
+    return blog || undefined;
   }
 
   async deleteBlog(id: string, authorId: string): Promise<boolean> {
-    const blog = this.blogs.get(id);
-    if (!blog || blog.authorId !== authorId) return false;
-
-    return this.blogs.delete(id);
+    const result = await db
+      .delete(blogs)
+      .where(and(eq(blogs.id, id), eq(blogs.authorId, authorId)))
+      .returning({ id: blogs.id });
+    return result.length > 0;
   }
 
   async incrementBlogViews(id: string): Promise<void> {
-    const blog = this.blogs.get(id);
-    if (blog) {
-      const currentViews = parseInt(blog.views || "0") || 0;
-      blog.views = (currentViews + 1).toString();
-      this.blogs.set(id, blog);
-    }
+    await db
+      .update(blogs)
+      .set({
+        views: sql`CAST(COALESCE(${blogs.views}, '0') AS INTEGER) + 1`,
+      })
+      .where(eq(blogs.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
