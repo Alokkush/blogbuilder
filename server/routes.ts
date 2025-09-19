@@ -50,6 +50,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
   });
 
+  // Simple test endpoint
+  app.get("/api/test", async (_req, res) => {
+    res.status(200).json({ 
+      message: "API is working correctly", 
+      timestamp: new Date().toISOString(),
+      service: "Blog Builder API"
+    });
+  });
+
   // Legacy registration endpoint - disabled for security
   // Users are now auto-provisioned via authMiddleware
   app.post("/api/auth/register", async (req, res) => {
