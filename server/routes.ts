@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertBlogSchema, updateBlogSchema } from "@shared/schema";
 import { z } from "zod";
-import { verifyIdToken } from "./firebase-admin";
+import { verifyAuthToken } from "./supabase-admin";
 
 import { Request, Response, NextFunction } from "express";
 
@@ -17,22 +17,22 @@ const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: Ne
     return res.status(401).json({ message: "Authentication required" });
   }
   
-  const idToken = authHeader.split('Bearer ')[1];
-  const decodedToken = await verifyIdToken(idToken);
+  const authToken = authHeader.split('Bearer ')[1];
+  const user = await verifyAuthToken(authToken);
   
-  if (!decodedToken) {
+  if (!user) {
     return res.status(401).json({ message: "Invalid token" });
   }
   
   // Ensure user exists in our database, create if not
-  let user = await storage.getUser(decodedToken.uid);
-  if (!user) {
+  let dbUser = await storage.getUser(user.id);
+  if (!dbUser) {
     // Auto-create user from token claims
     try {
-      user = await storage.createUser({
-        id: decodedToken.uid,
-        email: decodedToken.email || '',
-        name: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
+      dbUser = await storage.createUser({
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
       });
     } catch (error) {
       console.error("Error creating user:", error);
@@ -40,7 +40,7 @@ const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: Ne
     }
   }
   
-  req.user = user;
+  req.user = dbUser;
   next();
 };
 

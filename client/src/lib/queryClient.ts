@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { auth } from "./firebase";
+import { supabase } from "./supabase";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -10,13 +10,9 @@ async function throwIfResNotOk(res: Response) {
 
 async function getAuthHeaders() {
   const headers: Record<string, string> = {};
-  if (auth.currentUser) {
-    try {
-      const token = await auth.currentUser.getIdToken();
-      headers['Authorization'] = `Bearer ${token}`;
-    } catch (error) {
-      console.error("Error getting ID token:", error);
-    }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
   }
   return headers;
 }

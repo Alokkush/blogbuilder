@@ -1,6 +1,21 @@
+import { config } from 'dotenv';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env file
+config({ path: resolve(__dirname, '.env') });
+
+console.log('Environment variables loaded:');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+console.log('SUPABASE_SERVICE_KEY exists:', !!process.env.SUPABASE_SERVICE_KEY);
 
 const app = express();
 app.use(express.json());
@@ -61,11 +76,19 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
+  
+  // Handle Windows-specific issue with reusePort
+  const serverOptions: any = {
     port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+    host: "0.0.0.0"
+  };
+  
+  // Only use reusePort on non-Windows platforms
+  if (process.platform !== "win32") {
+    serverOptions.reusePort = true;
+  }
+  
+  server.listen(serverOptions, () => {
     log(`serving on port ${port}`);
   });
 })();

@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { signIn } from '@/lib/firebase';
+import { signIn } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth-context';
 
-const LoginPage = () => {
+const LoginPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();

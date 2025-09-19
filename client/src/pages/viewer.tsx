@@ -3,7 +3,7 @@ import { Link, useParams } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getBlog, incrementBlogViews } from '@/lib/firebase';
+import { getBlog, incrementBlogViews } from '@/lib/supabase';
 import { BlogWithAuthor } from '@shared/schema';
 
 const ViewerPage = () => {

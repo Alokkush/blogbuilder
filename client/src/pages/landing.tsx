@@ -98,7 +98,7 @@ const LandingPage = () => {
                   <i className="fas fa-cloud text-2xl text-primary"></i>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Cloud Storage</h3>
-                <p className="text-muted-foreground">Secure Firebase storage for all your content and media</p>
+                <p className="text-muted-foreground">Secure Supabase storage for all your content and media</p>
               </div>
             </div>
           </div>

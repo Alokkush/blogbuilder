@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { signUp } from '@/lib/firebase';
+import { signUp } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth-context';
 
-const SignupPage = () => {
+const SignupPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -60,7 +60,7 @@ const SignupPage = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev: typeof formData) => ({
       ...prev,
       [e.target.name]: e.target.value
     }));

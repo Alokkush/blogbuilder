@@ -11,10 +11,10 @@ import { MediaUpload } from '@/components/media-upload';
 import { useAuth } from '@/contexts/auth-context';
 import { useAutoSave } from '@/hooks/use-auto-save';
 import { useToast } from '@/hooks/use-toast';
-import { createBlog, updateBlog, getBlog } from '@/lib/firebase';
+import { createBlog, updateBlog, getBlog } from '@/lib/supabase';
 import { Blog } from '@shared/schema';
 
-const EditorPage = () => {
+const EditorPage: React.FC = () => {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -60,8 +60,8 @@ const EditorPage = () => {
   const loadBlog = async (id: string) => {
     setLoadingBlog(true);
     try {
-      const blog = await getBlog(id) as any;
-      if (blog && blog.authorId === user?.uid) {
+      const blog: any = await getBlog(id);
+      if (blog && blog.author_id === user?.id) {
         setBlogData({
           title: blog.title || '',
           content: blog.content || '',
@@ -69,7 +69,7 @@ const EditorPage = () => {
           category: blog.category || 'technology',
           tags: blog.tags?.join(', ') || '',
           theme: blog.theme || 'modern',
-          isPublished: blog.isPublished || false,
+          isPublished: blog.is_published || false,
         });
       } else {
         toast({
@@ -102,17 +102,17 @@ const EditorPage = () => {
         content: blogData.content,
         excerpt: blogData.excerpt || blogData.content.substring(0, 150),
         category: blogData.category,
-        tags: blogData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        tags: blogData.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         theme: blogData.theme,
-        isPublished: publish,
-        authorId: user.uid,
+        is_published: publish,
+        author_id: user.id,
       };
 
       if (blogId) {
         // Update existing blog
         await updateBlog(blogId, {
           ...blogPayload,
-          isPublished: publish,
+          is_published: publish,
         });
         toast({
           title: publish ? "Blog published!" : "Draft saved!",
@@ -120,7 +120,7 @@ const EditorPage = () => {
         });
       } else {
         // Create new blog
-        const newBlogId = await createBlog(blogPayload);
+        const newBlogId: any = await createBlog(blogPayload);
         setBlogId(newBlogId);
         setLocation(`/editor?id=${newBlogId}`);
         toast({
@@ -147,7 +147,7 @@ const EditorPage = () => {
   const handleMediaUpload = (urls: string[]) => {
     // Insert images into the content
     const imageHtml = urls.map(url => `<img src="${url}" alt="Uploaded media" style="max-width: 100%; height: auto;" />`).join('\n');
-    setBlogData(prev => ({
+    setBlogData((prev: typeof blogData) => ({
       ...prev,
       content: prev.content + '\n' + imageHtml
     }));
@@ -225,7 +225,7 @@ const EditorPage = () => {
                 <Input
                   id="title"
                   value={blogData.title}
-                  onChange={(e) => setBlogData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => setBlogData((prev: typeof blogData) => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter your blog title"
                   data-testid="input-title"
                 />
@@ -233,14 +233,14 @@ const EditorPage = () => {
               
               <ThemeSelector
                 value={blogData.theme}
-                onChange={(theme) => setBlogData(prev => ({ ...prev, theme }))}
+                onChange={(theme) => setBlogData((prev: typeof blogData) => ({ ...prev, theme }))}
               />
               
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={blogData.category}
-                  onValueChange={(category) => setBlogData(prev => ({ ...prev, category }))}
+                  onValueChange={(category) => setBlogData((prev: typeof blogData) => ({ ...prev, category }))}
                 >
                   <SelectTrigger data-testid="select-category">
                     <SelectValue />
@@ -270,7 +270,7 @@ const EditorPage = () => {
                 <Input
                   id="tags"
                   value={blogData.tags}
-                  onChange={(e) => setBlogData(prev => ({ ...prev, tags: e.target.value }))}
+                  onChange={(e) => setBlogData((prev: typeof blogData) => ({ ...prev, tags: e.target.value }))}
                   placeholder="web, css, design (comma separated)"
                   data-testid="input-tags"
                 />
@@ -284,7 +284,7 @@ const EditorPage = () => {
                 <textarea
                   id="excerpt"
                   value={blogData.excerpt}
-                  onChange={(e) => setBlogData(prev => ({ ...prev, excerpt: e.target.value }))}
+                  onChange={(e) => setBlogData((prev: typeof blogData) => ({ ...prev, excerpt: e.target.value }))}
                   placeholder="Brief description of your blog post..."
                   className="w-full px-3 py-2 border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                   rows={3}
@@ -300,7 +300,7 @@ const EditorPage = () => {
           <CardContent className="p-0">
             <RichTextEditor
               value={blogData.content}
-              onChange={(content) => setBlogData(prev => ({ ...prev, content }))}
+              onChange={(content) => setBlogData((prev: typeof blogData) => ({ ...prev, content }))}
               placeholder="Start writing your blog post..."
             />
           </CardContent>

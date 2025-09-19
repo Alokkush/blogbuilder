@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { uploadFile } from '@/lib/firebase';
+import { uploadFile } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -45,7 +45,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
         title: "Upload successful",
         description: `${urls.length} file(s) uploaded successfully.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
       toast({
         title: "Upload failed",

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { getUserBlogs, deleteBlog, logOut } from '@/lib/firebase';
+import { getUserBlogs, deleteBlog, logOut } from '@/lib/supabase';
 import { Blog } from '@shared/schema';
 
 const DashboardPage = () => {
@@ -37,7 +37,7 @@ const DashboardPage = () => {
 
   const loadUserBlogs = async () => {
     try {
-      const userBlogs = await getUserBlogs(user!.uid);
+      const userBlogs = await getUserBlogs(user!.id);
       setBlogs(userBlogs as Blog[]);
     } catch (error) {
       console.error('Error loading blogs:', error);
@@ -155,7 +155,7 @@ const DashboardPage = () => {
                   <i className="fas fa-user text-primary"></i>
                 </div>
                 <span className="text-sm font-medium hidden sm:block" data-testid="text-username">
-                  {user.displayName || user.email}
+                  {user.user_metadata?.full_name || user.email}
                 </span>
                 <Button variant="ghost" size="sm" onClick={handleLogout} data-testid="button-logout">
                   <i className="fas fa-sign-out-alt"></i>

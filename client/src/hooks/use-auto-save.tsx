@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { updateBlog } from '@/lib/firebase';
+import { updateBlog } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseAutoSaveOptions {
