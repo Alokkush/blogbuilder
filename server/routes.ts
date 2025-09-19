@@ -45,6 +45,11 @@ const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: Ne
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Render
+  app.get("/health", async (_req, res) => {
+    res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
+  });
+
   // Legacy registration endpoint - disabled for security
   // Users are now auto-provisioned via authMiddleware
   app.post("/api/auth/register", async (req, res) => {
