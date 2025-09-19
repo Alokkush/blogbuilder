@@ -88,9 +88,15 @@ export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
 
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    // If the build directory doesn't exist, serve a simple API response
+    console.log("Build directory not found, serving API only");
+    app.use("*", (_req, res) => {
+      res.status(200).json({ 
+        message: "Blog Builder API is running", 
+        status: "API only mode - frontend not built" 
+      });
+    });
+    return;
   }
 
   app.use(express.static(distPath));
