@@ -186,6 +186,16 @@ npm run dev
 
 ## 🌐 Deployment
 
+### Frontend Deployment (Vercel)
+
+1. Push your code to a GitHub repository
+2. Create a new project on Vercel
+3. Connect your GitHub repository
+4. Set environment variables in Vercel dashboard:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+5. Deploy!
+
 ### Backend Deployment (Render)
 
 1. Push your code to a GitHub repository
@@ -205,11 +215,12 @@ npm run dev
 1. Create a new Static Site on Render
 2. Connect the same GitHub repository
 3. Set build command: `npm install --legacy-peer-deps && npm run build`
-4. Set publish directory: `dist/public`
-5. Set environment variables:
+4. Set start command: `npm run start`
+5. Set publish directory: `dist/public`
+6. Set environment variables:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-6. Deploy!
+7. Deploy!
 
 ### Automated Deployment with render.yaml
 

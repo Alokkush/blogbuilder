@@ -18,8 +18,12 @@ services:
     name: blog-builder-frontend
     env: node
     buildCommand: npm install --legacy-peer-deps && npm run build
-    startCommand: npm run dev
+    startCommand: npm run start
     staticPublishPath: dist/public
     envVars:
       - key: NODE_ENV
         value: production
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
