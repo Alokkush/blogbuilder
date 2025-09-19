@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Log environment variables for debugging
+console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY);
+console.log('Both variables present:', !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY));
+
 // Create a single supabase client for interacting with your database
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
@@ -9,6 +14,7 @@ let supabase: any = null;
 
 if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
   try {
+    console.log("Creating real Supabase client with:", { supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 10) + '...' });
     supabase = createClient(supabaseUrl, supabaseAnonKey);
   } catch (error) {
     console.warn("Failed to create Supabase client:", error);
