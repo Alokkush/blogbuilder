@@ -252,6 +252,15 @@ const EditorPage = () => {
                     <SelectItem value="education">Education</SelectItem>
                     <SelectItem value="design">Design</SelectItem>
                     <SelectItem value="productivity">Productivity</SelectItem>
+                    <SelectItem value="health">Health & Fitness</SelectItem>
+                    <SelectItem value="travel">Travel</SelectItem>
+                    <SelectItem value="food">Food & Cooking</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="science">Science</SelectItem>
+                    <SelectItem value="entertainment">Entertainment</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="politics">Politics</SelectItem>
+                    <SelectItem value="culture">Arts & Culture</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -265,6 +274,9 @@ const EditorPage = () => {
                   placeholder="web, css, design (comma separated)"
                   data-testid="input-tags"
                 />
+                <div className="text-xs text-muted-foreground">
+                  Popular tags: react, javascript, css, design, tutorial, tips, guide, frontend
+                </div>
               </div>
 
               <div className="md:col-span-2 space-y-2">

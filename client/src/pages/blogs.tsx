@@ -15,6 +15,7 @@ const BlogsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [tagFilter, setTagFilter] = useState('all');
   const [sortBy, setSortBy] = useState('latest');
 
   useEffect(() => {
@@ -23,7 +24,7 @@ const BlogsPage = () => {
 
   useEffect(() => {
     filterAndSortBlogs();
-  }, [blogs, searchTerm, categoryFilter, sortBy]);
+  }, [blogs, searchTerm, categoryFilter, tagFilter, sortBy]);
 
   const loadBlogs = async () => {
     try {
@@ -49,13 +50,21 @@ const BlogsPage = () => {
       filtered = filtered.filter(blog =>
         blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         blog.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        blog.author?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        blog.author?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     // Filter by category
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(blog => blog.category === categoryFilter);
+    }
+
+    // Filter by tag
+    if (tagFilter !== 'all') {
+      filtered = filtered.filter(blog => 
+        blog.tags?.includes(tagFilter)
+      );
     }
 
     // Sort blogs
@@ -75,6 +84,16 @@ const BlogsPage = () => {
   };
 
   const categories = Array.from(new Set(blogs.map(blog => blog.category).filter(Boolean)));
+  const allTags = blogs.flatMap(blog => blog.tags || []);
+  const popularTags = Array.from(
+    allTags.reduce((acc, tag) => {
+      acc.set(tag, (acc.get(tag) || 0) + 1);
+      return acc;
+    }, new Map())
+  )
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 20)
+    .map(([tag]) => tag);
 
   if (loading) {
     return (
@@ -131,40 +150,78 @@ const BlogsPage = () => {
             </p>
             
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-2xl mx-auto">
-              <div className="relative flex-1 w-full">
-                <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
-                <Input
-                  placeholder="Search blogs, topics, authors..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12"
-                  data-testid="input-search"
-                />
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-4xl mx-auto">
+                <div className="relative flex-1 w-full">
+                  <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
+                  <Input
+                    placeholder="Search blogs, topics, authors..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12"
+                    data-testid="input-search"
+                  />
+                </div>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-48" data-testid="select-category">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category || ''}>
+                        {category ? category.charAt(0).toUpperCase() + category.slice(1) : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={tagFilter} onValueChange={setTagFilter}>
+                  <SelectTrigger className="w-full sm:w-40" data-testid="select-tag">
+                    <SelectValue placeholder="All Tags" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tags</SelectItem>
+                    {popularTags.map(tag => (
+                      <SelectItem key={tag} value={tag}>
+                        #{tag}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full sm:w-32" data-testid="select-sort">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="popular">Popular</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-48" data-testid="select-category">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category || ''}>
-                      {category ? category.charAt(0).toUpperCase() + category.slice(1) : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-32" data-testid="select-sort">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest</SelectItem>
-                  <SelectItem value="popular">Popular</SelectItem>
-                  <SelectItem value="oldest">Oldest</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Popular Tags */}
+              {popularTags.length > 0 && (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-3">Popular Tags:</p>
+                  <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
+                    {popularTags.slice(0, 10).map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => setTagFilter(tag)}
+                        className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                          tagFilter === tag
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                        data-testid={`tag-filter-${tag}`}
+                      >
+                        #{tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -178,12 +235,12 @@ const BlogsPage = () => {
               <i className="fas fa-search text-4xl text-muted-foreground mb-4"></i>
               <h2 className="text-2xl font-bold text-foreground mb-2">No blogs found</h2>
               <p className="text-muted-foreground mb-6">
-                {searchTerm || categoryFilter !== 'all' 
+                {searchTerm || categoryFilter !== 'all' || tagFilter !== 'all'
                   ? 'Try adjusting your search or filter criteria.'
                   : 'No blogs have been published yet.'
                 }
               </p>
-              {!searchTerm && categoryFilter === 'all' && (
+              {!searchTerm && categoryFilter === 'all' && tagFilter === 'all' && (
                 <Link href="/signup">
                   <Button data-testid="button-start-writing">
                     Start Writing
