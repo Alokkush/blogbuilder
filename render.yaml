@@ -1,7 +1,9 @@
 services:
+  # Backend API Service
   - type: web
     name: blog-builder-api
     env: node
+    plan: free
     buildCommand: npm install --legacy-peer-deps
     startCommand: npm run start
     envVars:
@@ -13,10 +15,14 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: PORT
+        value: 10000
 
+  # Frontend Static Site
   - type: web
     name: blog-builder-frontend
     env: node
+    plan: free
     buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm run start
     staticPublishPath: dist/public

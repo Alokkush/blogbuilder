@@ -201,26 +201,28 @@ npm run dev
 1. Push your code to a GitHub repository
 2. Create a new Web Service on Render
 3. Connect your GitHub repository
-4. Set build command: `npm install --legacy-peer-deps`
-5. Set start command: `npm run start`
-6. Set environment variables in Render dashboard:
+4. **Important**: Make sure the start command is set to `npm run start` (not `npm run dev`)
+5. Set build command: `npm install --legacy-peer-deps`
+6. Set start command: `npm run start`
+7. Set environment variables in Render dashboard:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_KEY`
    - `DATABASE_URL`
    - `NODE_ENV` = `production`
-7. Deploy!
+8. Deploy!
 
 ### Frontend Deployment (Render)
 
 1. Create a new Static Site on Render
 2. Connect the same GitHub repository
-3. Set build command: `npm install --legacy-peer-deps && npm run build`
-4. Set start command: `npm run start`
-5. Set publish directory: `dist/public`
-6. Set environment variables:
+3. **Important**: Make sure the start command is set to `npm run start` (not `npm run dev`)
+4. Set build command: `npm install --legacy-peer-deps && npm run build`
+5. Set start command: `npm run start`
+6. Set publish directory: `dist/public`
+7. Set environment variables:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-7. Deploy!
+8. Deploy!
 
 ### Automated Deployment with render.yaml
 
@@ -229,6 +231,9 @@ Alternatively, you can use the provided `render.yaml` file for automated deploym
 2. Create a new project on Render
 3. Connect your GitHub repository
 4. Render will automatically detect the `render.yaml` file and configure both services
+5. Make sure to set your environment variables in the Render dashboard after creation
+
+**Note**: If you're experiencing issues with Render still running `npm run dev`, please check your service configuration in the Render dashboard and ensure the start command is set to `npm run start`.
 
 ## ☁️ Supabase Storage Setup
 
