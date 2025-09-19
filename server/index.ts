@@ -3,7 +3,6 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -57,7 +56,10 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      // Import log function dynamically
+      import("./vite").then((viteModule) => {
+        viteModule.log(logLine);
+      });
     }
   });
 
@@ -78,9 +80,13 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (process.env.NODE_ENV === "development") {
+    // Import vite module dynamically only in development
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
+    // Import serveStatic function dynamically only in production
+    const { serveStatic } = await import("./vite");
     serveStatic(app);
   }
 
@@ -102,6 +108,9 @@ app.use((req, res, next) => {
   }
   
   server.listen(serverOptions, () => {
-    log(`serving on port ${port}`);
+    // Import log function dynamically
+    import("./vite").then((viteModule) => {
+      viteModule.log(`serving on port ${port}`);
+    });
   });
 })();
