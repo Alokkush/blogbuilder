@@ -152,12 +152,15 @@ PORT=5000
 For easier deployment to Render, you can use the provided environment template files:
 1. `render-frontend.env` - For the frontend static site
 2. `render-backend.env` - For the backend web service
+3. `render-all.env` - Combined file with all environment variables (can be used for either service)
 
 To use these files:
 1. Download the appropriate file
 2. Replace the placeholder values with your actual Supabase credentials
 3. In Render, when creating your service, go to the "Advanced" section
 4. Use the "Import from .env" option to upload your configured file
+
+Note: You only need to import the variables relevant to each service. The combined `render-all.env` file contains variables for both services, but Render will only use the ones that are relevant to each specific service.
 
 ### 4. Installation
 
